@@ -8,10 +8,22 @@ use \Exception;
 class Object implements ArrayAccess {
 
     /**
-     * Object attributes
+     * Object data
      * @var array
      */
     protected $_data = array();
+
+    /**
+     * Object original data
+     * @var array
+     */
+    protected $_original = array();
+
+    /**
+     * Object data changes
+     * @var array
+     */
+    protected $_changes = array();
 
     /**
      * Normalize key name for object mapping
@@ -40,12 +52,12 @@ class Object implements ArrayAccess {
         switch( $action ){
             case 'get' :
                 $data = $this->getData(
-                    $key, isset($args[0]) ? $args[0] : null);
+                    $key, isset($args[0]) ? $args[0] : NULL);
                 return $data;
 
             case 'set' :
                 $result = $this->setData(
-                    $key, isset($args[0]) ? $args[0] : null);
+                    $key, isset($args[0]) ? $args[0] : NULL);
                 return $result;
 
             case 'uns' :
@@ -53,68 +65,13 @@ class Object implements ArrayAccess {
                 return $result;
 
             case 'has' :
-                return isset($this->_data[$key]);
+                $result = $this->hasData($key);
+                return $result;
         }
 
         $message = 'Invalid method '. get_class($this). '::'. $method. '()';
         throw new Exception($message);
 
-    }
-
-    /**
-     * Retrieve data from object
-     * @param string $key
-     * @return mixed
-     */
-    public function getData($key = ''){
-
-        $key = $this->normalizeKeyName($key);
-
-        if( $key === '' ){
-            return $this->_data;
-        }
-
-        return isset($this->_data[$key]) ? $this->_data[$key] : null;
-    }
-
-    /**
-     * Set object data
-     * @param string $key
-     * @param mixed $value
-     * @return object
-     */
-    public function setData($key, $value){
-        $key = $this->normalizeKeyName($key);
-        $this->_data[$key] = $value;
-        return $this;
-    }
-
-    /**
-     * Push object data
-     * @param mixed $value
-     * @return object
-     */
-    public function pushData($value){
-        $this->_data[] = $value;
-        return $this;
-    }
-
-    /**
-     * Unset data on object
-     * @param string $key
-     * @return object
-     */
-    public function unsetData($key = ''){
-
-        $key = $this->normalizeKeyName($key);
-
-        if( $key === '' ){
-            $this->_data = array();
-        }else{
-            unset($this->_data[$key]);
-        }
-
-        return $this;
     }
 
     /**
@@ -134,6 +91,118 @@ class Object implements ArrayAccess {
     }
 
     /**
+     * Retrieve data from object
+     * @param string $key
+     * @return mixed
+     */
+    public function getData($key = ''){
+
+        $key = $this->normalizeKeyName($key);
+
+        if( $key === '' ){
+            return $this->_data;
+        }
+
+        return isset($this->_data[$key]) ? $this->_data[$key] : NULL;
+    }
+
+    /**
+     * Set object data
+     * @param string $key
+     * @param mixed $value
+     * @return object
+     */
+    public function setData($key, $value){
+
+        $key = $this->normalizeKeyName($key);
+
+        if( isset($this->_data[$key]) ){
+            $this->_changes[$key] = $value;
+
+            if( $this->_data[$key] !== $value ){
+                $this->_original[$key] = $this->_data[$key];
+            }
+        }
+
+        $this->_data[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Push object data
+     * @param mixed $value
+     * @return object
+     */
+    public function pushData($value){
+
+        $this->_data[] = $value;
+        $this->_changes[] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Push data to the object
+     * @param array $data
+     * @return object
+     */
+    public function addData($data){
+        foreach( $data as $key => $value ){
+            $this->setData($key, $value);
+        }
+        return $this;
+    }
+
+    /**
+     * Unset data on object
+     * @param string $key
+     * @return object
+     */
+    public function unsetData($key){
+
+        $key = $this->normalizeKeyName($key);
+
+        if( isset($this->_data[$key]) ){
+            $this->_original[$key] = $this->_data[$key];
+            $this->_changes[$key] = NULL;
+            unset($this->_data[$key]);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Clean data on object
+     * @param string $key
+     * @return object
+     */
+    public function cleanData(){
+
+        $this->_data = array();
+        $this->_original = array();
+        $this->_changes = array();
+
+        return $this;
+    }
+
+    /**
+     * Retrieve object data original
+     * @return array
+     */
+    public function getOriginal(){
+        return $this->_original;
+    }
+
+    /**
+     * Retrieve object data changes
+     * @return array
+     */
+    public function getChanges(){
+        return $this->_changes;
+    }
+
+    /**
      * Convert object attributes to array
      * @param array $attributes
      * @return array
@@ -149,7 +218,7 @@ class Object implements ArrayAccess {
             if( isset($this->_data[$attribute]) ){
                 $arrRes[$attribute] = $this->_data[$attribute];
             } else {
-                $arrRes[$attribute] = null;
+                $arrRes[$attribute] = NULL;
             }
         }
 
@@ -199,7 +268,7 @@ class Object implements ArrayAccess {
      * @return mixed
      */
     public function offsetGet($offset){
-        return isset($this->_data[$offset]) ? $this->_data[$offset] : null;
+        return isset($this->_data[$offset]) ? $this->_data[$offset] : NULL;
     }
 
 }
