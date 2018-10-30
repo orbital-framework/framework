@@ -117,11 +117,12 @@ class Object implements ArrayAccess {
         $key = $this->normalizeKeyName($key);
 
         if( isset($this->_data[$key]) ){
-            $this->_changes[$key] = $value;
-
             if( $this->_data[$key] !== $value ){
                 $this->_original[$key] = $this->_data[$key];
+                $this->_changes[$key] = $value;
             }
+        }else{
+            $this->_changes[$key] = $value;
         }
 
         $this->_data[$key] = $value;
@@ -178,8 +179,17 @@ class Object implements ArrayAccess {
      * @return object
      */
     public function cleanData(){
-
         $this->_data = array();
+        return $this->cleanChanges();
+    }
+
+    /**
+     * Clean data changes on object
+     * @param string $key
+     * @return object
+     */
+    public function cleanChanges(){
+
         $this->_original = array();
         $this->_changes = array();
 
