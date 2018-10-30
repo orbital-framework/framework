@@ -220,19 +220,28 @@ class Object implements ArrayAccess {
     public function __toArray($attributes = array()){
 
         if( empty($attributes) ){
-            return $this->_data;
+            $data = $this->_data;
+        }else{
+
+            $data = array();
+            foreach( $attributes as $attribute ){
+                if( isset($this->_data[$attribute]) ){
+                    $data[$attribute] = $this->_data[$attribute];
+                } else {
+                    $data[$attribute] = NULL;
+                }
+            }
+
         }
 
-        $arrRes = array();
-        foreach( $attributes as $attribute ){
-            if( isset($this->_data[$attribute]) ){
-                $arrRes[$attribute] = $this->_data[$attribute];
-            } else {
-                $arrRes[$attribute] = NULL;
+        foreach( $data as $key => $item ){
+            if( $item instanceof Object ){
+                $item = $item->toArray();
+                $data[$key] = $item;
             }
         }
 
-        return $arrRes;
+        return $data;
     }
 
     /**
