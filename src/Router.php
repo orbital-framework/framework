@@ -315,7 +315,7 @@ abstract class Router {
                 $route['parameters']
             );
         } catch( Exception $e ) {
-            $result = self::runError(500);
+            $result = self::runError(500, $e);
         }
 
         return $result;
@@ -324,12 +324,19 @@ abstract class Router {
     /**
      * Force error on request
      * @param int $number
+     * @param mixed $exception
      * @return void
      */
-    public static function runError($number = 404){
+    public static function runError($number = 404, $exception = NULL){
 
         if( !isset(self::$errors[$number]) ){
-            die('Router error '. $number);
+
+            if( $exception instanceof Exception ){
+                throw $exception;
+            }else{
+                die('Router error '. $number);
+            }
+
         }
 
         $callback = self::$errors[ $number ]['callback'];
@@ -337,7 +344,9 @@ abstract class Router {
         self::setActiveRoute(array(
             'rule' => $number,
             'callback' => $callback,
-            'parameters' => array(),
+            'parameters' => array(
+                $exception
+            ),
             'options' => array('status' => $number)
         ));
 
