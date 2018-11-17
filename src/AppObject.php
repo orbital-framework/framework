@@ -235,7 +235,7 @@ class AppObject implements ArrayAccess {
         }
 
         foreach( $data as $key => $item ){
-            if( $item instanceof Object ){
+            if( $item instanceof AppObject ){
                 $item = $item->toArray();
                 $data[$key] = $item;
             }
