@@ -3,7 +3,7 @@
 namespace Orbital\Framework;
 
 use \Exception;
-use \Orbital\Framework\Object;
+use \Orbital\Framework\AppObject;
 
 abstract class App {
 
@@ -90,12 +90,12 @@ abstract class App {
 
     /**
      * Retrieve Config object
-     * @return object
+     * @return AppObject
      */
     public static function getConfig(){
 
         if( self::$config == NULL ){
-            self::$config = new Object;
+            self::$config = new AppObject;
         }
 
         return self::$config;
@@ -103,12 +103,12 @@ abstract class App {
 
     /**
      * Retrieve object instances
-     * @return object
+     * @return AppObject
      */
     public static function getInstances(){
 
         if( self::$instances == NULL ){
-            self::$instances = new Object;
+            self::$instances = new AppObject;
         }
 
         return self::$instances;

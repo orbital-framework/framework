@@ -5,7 +5,7 @@ namespace Orbital\Framework;
 use \ArrayAccess;
 use \Exception;
 
-class Object implements ArrayAccess {
+class AppObject implements ArrayAccess {
 
     /**
      * Object data
