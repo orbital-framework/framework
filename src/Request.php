@@ -68,7 +68,36 @@ abstract class Request {
             return;
         }
 
-        self::$_header = getallheaders();
+        $copy = array(
+            'CONTENT_TYPE' => 'Content-Type',
+            'CONTENT_LENGTH' => 'Content-Length',
+            'CONTENT_MD5' => 'Content-Md5',
+            'REDIRECT_HTTP_AUTHORIZATION' => 'Authorization',
+            'PHP_AUTH_DIGEST' => 'Authorization'
+        );
+
+        foreach( $_SERVER as $key => $value ){
+            if( substr($key, 0, 5) === 'HTTP_' ){
+                $key = substr($key, 5);
+                $key = ucwords(strtolower(str_replace('_', ' ', $key)));
+                $key = str_replace(' ', '-', $key);
+                self::$_header[$key] = $value;
+            }elseif( isset($copy[$key]) ){
+                self::$_header[ $copy[$key] ] = $value;
+            }
+        }
+
+        if( !isset(self::$_header['Authorization'])
+            AND isset($_SERVER['PHP_AUTH_USER']) ){
+
+            $pass = isset($_SERVER['PHP_AUTH_PW'])
+                ? $_SERVER['PHP_AUTH_PW'] : '';
+            $encode = base64_encode($_SERVER['PHP_AUTH_USER']. ':'. $pass);
+            $basic = 'Basic '. $encode;
+
+            self::$_header['Authorization'] = $basic;
+
+        }
 
         if( isset($_REQUEST) ){
             foreach( $_REQUEST as $key => $value ){
@@ -131,6 +160,10 @@ abstract class Request {
         if( $parsed === FALSE ){
             $parsed = array();
             parse_str($input, $parsed);
+        }
+
+        if( !$parsed ){
+            $parsed = array();
         }
 
         self::$_request = array_merge(
