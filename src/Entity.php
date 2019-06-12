@@ -5,7 +5,7 @@ namespace Orbital\Framework;
 use \ArrayAccess;
 use \Exception;
 
-class AppObject implements ArrayAccess {
+class Entity implements ArrayAccess {
 
     /**
      * Object data
@@ -235,7 +235,7 @@ class AppObject implements ArrayAccess {
         }
 
         foreach( $data as $key => $item ){
-            if( $item instanceof AppObject ){
+            if( $item instanceof Entity ){
                 $item = $item->toArray();
                 $data[$key] = $item;
             }
