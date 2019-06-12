@@ -16,15 +16,29 @@ abstract class Observer {
      * Add watches to event
      * @param string $event
      * @param string $callback
+     * @param mixed $position
      * @return void
      */
-    public static function on($event, $callback){
+    public static function on($event, $callback, $position = NULL){
 
         if( !isset(self::$observers[ $event ]) ){
             self::$observers[ $event ] = array();
         }
 
-        self::$observers[ $event ][] = $callback;
+        if( $position ){
+
+            if( isset(self::$observers[ $event ][ $position ]) ){
+                throw new Exception('Position ('. $position. ') already exist on this observer event: '. $event);
+            }
+
+            self::$observers[ $event ][ $position ] = $callback;
+
+        }else{
+
+            self::$observers[ $event ][] = $callback;
+
+        }
+
     }
 
     /**
@@ -49,6 +63,7 @@ abstract class Observer {
         }
 
         $observers = self::$observers[ $event ];
+        ksort($observers);
 
         foreach( $observers as $observer ){
             App::runMethod($observer, $data);
