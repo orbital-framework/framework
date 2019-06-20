@@ -411,6 +411,30 @@ abstract class Request {
     }
 
     /**
+     * Retrieve request interface Method
+     * @return string
+     */
+    public static function method(){
+
+        if( php_sapi_name() === 'cli' OR defined('STDIN') ){
+            $method = 'CLI';
+
+        }else{
+
+            $method = ( isset($_SERVER['REQUEST_METHOD']) ) ?
+                        $_SERVER['REQUEST_METHOD'] : 'GET';
+
+            // Force GET when method is HEAD
+            if( $method == 'HEAD' ){
+                $method = 'GET';
+            }
+
+        }
+
+        return $method;
+    }
+
+    /**
      * Retrieve client IP
      * @return string
      */
