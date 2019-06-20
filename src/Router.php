@@ -4,9 +4,16 @@ namespace Orbital\Framework;
 
 use \Orbital\Framework\App;
 use \Orbital\Framework\Header;
+use \Orbital\Framework\Request;
 use \Exception;
 
 abstract class Router {
+
+    /**
+     * Path for routers
+     * @var string
+     */
+    public static $path = '/';
 
     /**
      * Router URL
@@ -21,28 +28,10 @@ abstract class Router {
     public static $query = NULL;
 
     /**
-     * Ajax flag
-     * @var boolean
-     */
-    public static $isAjax = NULL;
-
-    /**
-     * Request HTTP Method
-     * @var string
-     */
-    public static $method = NULL;
-
-    /**
      * Active route
      * @var array
      */
     public static $route = array();
-
-    /**
-     * Path for routers
-     * @var string
-     */
-    public static $path = '/';
 
     /**
      * "Routers" for errors - 404, 401...
@@ -91,96 +80,16 @@ abstract class Router {
     }
 
     /**
-     * Retrieve router query
+     * Retrieve router active query
      * @return string
      */
-    public static function getQuery(){
+    public static function getActiveQuery(){
 
         if( self::$query == NULL ){
             self::processUrl();
         }
 
         return self::$query;
-    }
-
-    /**
-     * Retrieve route query segment
-     * @param int $number
-     * @return string|boolean
-     */
-    public static function getSegment($number){
-
-        $number = (int) $number - 1;
-        $segment = explode('/', ltrim(self::getQuery(), '/') );
-
-        return (isset($segment[$number])) ? $segment[$number] : FALSE;
-    }
-
-    /**
-     * Retrieve router HTTP Method
-     * @return string
-     */
-    public static function getHttpMethod(){
-
-        if( self::$method == NULL ){
-
-            self::$method = ( isset($_SERVER['REQUEST_METHOD']) ) ?
-                                  $_SERVER['REQUEST_METHOD'] : 'GET';
-
-            // Force GET when method is HEAD
-            if( self::$method == 'HEAD' ){
-                self::$method = 'GET';
-            }
-
-        }
-
-        return self::$method;
-    }
-
-    /**
-     * Retrieve if router is ajax request
-     * @return boolean
-     */
-    public static function getIsAjax(){
-
-        if( self::$isAjax == NULL ){
-
-            self::$isAjax = ( isset($_SERVER['HTTP_X_REQUESTED_WITH'])
-                AND $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest' ) ? TRUE : FALSE;
-
-        }
-
-        return self::$isAjax;
-    }
-
-    /**
-     * Set path prefix to routers
-     * @param string $path
-     * @return void
-     */
-    public static function setPath($path){
-
-        $path = '/'. trim($path, '/'). '/';
-        $path = str_replace('//', '/', $path);
-
-        self::$path = $path;
-    }
-
-    /**
-     * Retrieve path prefix to routers
-     * @return string
-     */
-    public static function getPath(){
-        return self::$path;
-    }
-
-    /**
-     * Set active route
-     * @param array $route
-     * @return void
-     */
-    public static function setActiveRoute($route){
-        self::$route = $route;
     }
 
     /**
@@ -191,12 +100,11 @@ abstract class Router {
 
         if( !self::$route ){
 
-            $route = self::getRoute(
-                self::getQuery(),
-                self::getHttpMethod()
-            );
+            $method = Request::method();
+            $query = self::getActiveQuery();
+            $route = self::getRoute($query, $method);
 
-            self::setActiveRoute($route);
+            self::$route = $route;
 
         }
 
@@ -221,41 +129,24 @@ abstract class Router {
 
         foreach( $routers as $router ){
 
-            $pattern = '/^'.
-                str_replace(
-                    array('(:any)', '(:string)', '(:number)', '/'),
-                    array('([-0-9a-z]+)', '([a-z]+)', '([0-9]+)', '\/'),
-                $router['rule']).
-                '$/i';
+            $pattern = $router['rule'];
+            $pattern = preg_replace('/\(:([a-zA-Z0-9]+)\)/', '([a-z0-9]+)', $pattern);
+            $pattern = '/^'. str_replace('/', '\/', $pattern). '$/i';
 
-            if( preg_match($pattern, $uri) OR $router['rule'] == $uri ){
+            if( preg_match($pattern, $uri, $matches) OR $router['rule'] == $uri ){
 
                 $rule = $router['rule'];
                 $callback = $router['callback'];
-                $parameters = FALSE;
+                $parameters = array();
                 $options = array();
 
-                if( is_array($router['parameters']) ){
-                    $parameters = array();
-
-                    foreach( $router['parameters'] as $parameter ){
-
-                        // Segments
-                        if( strpos($parameter, '$') === 0
-                            AND is_numeric(str_replace('$', '', $parameter)) ){
-                            $parameter = str_replace('$', '', $parameter);
-                            $parameter = self::getSegment($parameter);
+                if( count($matches) > 1 ){
+                    foreach( $matches as $key => $value ){
+                        if( $key == 0 ){
+                            continue;
                         }
-
-                        $parameters[] = $parameter;
+                        $parameters[] = $value;
                     }
-
-                }
-
-                // Check for not authorized parameters
-                if( $parameters == FALSE
-                    AND self::getSegment( count(explode('/', $rule)) + 1) ){
-                    continue;
                 }
 
                 if( !$parameters ){
@@ -267,6 +158,7 @@ abstract class Router {
                 }
 
                 $route = array(
+                    'method' => $method,
                     'rule' => $rule,
                     'callback' => $callback,
                     'parameters' => $parameters,
@@ -290,7 +182,7 @@ abstract class Router {
         $route = self::getActiveRoute();
 
         if( !$route ){
-            return self::runError(404);
+            return self::runError(404, $route);
         }
 
         $options = $route['options'];
@@ -315,7 +207,7 @@ abstract class Router {
                 $route['parameters']
             );
         } catch( Exception $e ) {
-            $result = self::runError(500, $e);
+            $result = self::runError(500, $e, $route);
         }
 
         return $result;
@@ -325,11 +217,13 @@ abstract class Router {
      * Force error on request
      * @param int $number
      * @param mixed $exception
+     * @param mixed $last
      * @return void
      */
-    public static function runError($number = 404, $exception = NULL){
+    public static function runError($number = 404, $exception = NULL, $last = NULL){
 
-        if( !isset(self::$errors[$number]) ){
+        if( !isset(self::$errors[$number])
+            OR ($last AND $last['rule'] == $number) ){
 
             if( $exception instanceof Exception ){
                 throw $exception;
@@ -339,16 +233,17 @@ abstract class Router {
 
         }
 
+        // Set new route and try again
+        $method = ($last) ? $last['method'] : Request::method();
         $callback = self::$errors[ $number ]['callback'];
 
-        self::setActiveRoute(array(
+        self::$route = array(
+            'method' => $method,
             'rule' => $number,
             'callback' => $callback,
-            'parameters' => array(
-                $exception
-            ),
+            'parameters' => array($exception),
             'options' => array('status' => $number)
-        ));
+        );
 
         self::runRequest();
 
@@ -380,7 +275,6 @@ abstract class Router {
      * @param string $httpMethod
      * @param string $rule
      * @param string $callback
-     * @param array $parameters
      * @param array $options
      * @return void
      */
@@ -388,7 +282,6 @@ abstract class Router {
         $httpMethod,
         $rule,
         $callback,
-        $parameters = array(),
         $options = array()
         ){
 
@@ -399,7 +292,6 @@ abstract class Router {
                     $new,
                     $rule,
                     $callback,
-                    $parameters,
                     $options
                 );
             }
@@ -417,7 +309,6 @@ abstract class Router {
         $router = array(
             'rule' => $path,
             'callback' => $callback,
-            'parameters' => $parameters,
             'options' => $options
         );
 
@@ -439,6 +330,27 @@ abstract class Router {
     }
 
     // URL METHODS
+
+    /**
+     * Set path prefix to routers
+     * @param string $path
+     * @return void
+     */
+    public static function setPath($path){
+
+        $path = '/'. trim($path, '/'). '/';
+        $path = str_replace('//', '/', $path);
+
+        self::$path = $path;
+    }
+
+    /**
+     * Retrieve path prefix to routers
+     * @return string
+     */
+    public static function getPath(){
+        return self::$path;
+    }
 
     /**
      * Create valid URI
@@ -507,12 +419,6 @@ abstract class Router {
      */
     public static function getUrl($location = '', $query = NULL, $ignorePath = TRUE){
 
-        if( $location == '$this' ){
-            $location = ($query == TRUE) ? self::getActiveUrl() : self::getQuery();
-            $query = NULL;
-            $ignorePath = TRUE;
-        }
-
         $url = App::get('url');
 
         if( !$ignorePath
@@ -552,6 +458,28 @@ abstract class Router {
      */
     public static function pathUrl($location = '', $query = NULL){
         echo self::getPathUrl($location, $query, FALSE);
+    }
+
+    /**
+     * Retrieve current URL
+     * @param boolean $useQuery
+     * @return string
+     */
+    public static function getCurrentUrl($useQuery = FALSE){
+
+        $location = ( $useQuery ) ? self::getActiveQuery() : self::getActiveUrl();
+        $query = NULL;
+
+        return self::getUrl($location, $query, TRUE);
+    }
+
+    /**
+     * Print Current URL
+     * @param boolean $useQuery
+     * @return void
+     */
+    public static function currentUrl($useQuery = FALSE){
+        echo self::getCurrentUrl($useQuery);
     }
 
 }
