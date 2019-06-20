@@ -53,6 +53,12 @@ abstract class Request {
     private static $_cookie = array();
 
     /**
+     * CLI $arg
+     * @var array
+     */
+    private static $_arg = array();
+
+    /**
      * Processed flag
      * @var boolean
      */
@@ -63,11 +69,13 @@ abstract class Request {
      * @return void
      */
     private static function process(){
+        global $argv;
 
         if( self::$processed ){
             return;
         }
 
+        // Headers
         $copy = array(
             'CONTENT_TYPE' => 'Content-Type',
             'CONTENT_LENGTH' => 'Content-Length',
@@ -99,6 +107,7 @@ abstract class Request {
 
         }
 
+        // Request
         if( isset($_REQUEST) ){
             foreach( $_REQUEST as $key => $value ){
                 if( !is_null($value) ){
@@ -107,6 +116,7 @@ abstract class Request {
             }
         }
 
+        // Post
         if( isset($_POST) ){
             foreach( $_POST as $key => $value ){
                 if( !is_null($value) ){
@@ -115,6 +125,7 @@ abstract class Request {
             }
         }
 
+        // Get
         if( isset($_GET) ){
             foreach( $_GET as $key => $value ){
                 if( !is_null($value) ){
@@ -123,6 +134,7 @@ abstract class Request {
             }
         }
 
+        // Files
         if( isset($_FILES) ){
             foreach( $_FILES as $key => $value ){
 
@@ -146,6 +158,7 @@ abstract class Request {
             }
         }
 
+        // Cookie
         if( isset($_COOKIE) ){
             foreach( $_COOKIE as $key => $value ){
                 if( !is_null($value) ){
@@ -154,6 +167,25 @@ abstract class Request {
             }
         }
 
+        // CLI arg
+        if( isset($argv) ){
+            foreach( $argv as $key => $value ){
+
+                if( $key == 0 ){
+                    continue;
+                }
+
+                if( preg_match('/--([^=]+)=(.*)/', $value, $matches) ){
+                    self::$_arg[ $matches[1] ] = $matches[2];
+
+                }elseif( preg_match('/-([a-zA-Z0-9])/', $value, $matches) ){
+                    self::$_arg[ $matches[1] ] = true;
+                }
+
+            }
+        }
+
+        // PHP Input
         $input = file_get_contents('php://input');
         $parsed = json_decode($input, TRUE);
 
@@ -170,27 +202,31 @@ abstract class Request {
             self::$_request, $parsed
         );
 
-        switch( $_SERVER['REQUEST_METHOD'] ){
-            case 'GET':
-                self::$_get = array_merge(
-                    self::$_get, $parsed
-                );
-            break;
-            case 'POST':
-                self::$_post = array_merge(
-                    self::$_post, $parsed
-                );
-            break;
-            case 'PUT':
-                self::$_put = array_merge(
-                    self::$_put, $parsed
-                );
-            break;
-            case 'DELETE':
-                self::$_delete = array_merge(
-                    self::$_delete, $parsed
-                );
-            break;
+        if( isset($_SERVER['REQUEST_METHOD']) ){
+
+            switch( $_SERVER['REQUEST_METHOD'] ){
+                case 'GET':
+                    self::$_get = array_merge(
+                        self::$_get, $parsed
+                    );
+                break;
+                case 'POST':
+                    self::$_post = array_merge(
+                        self::$_post, $parsed
+                    );
+                break;
+                case 'PUT':
+                    self::$_put = array_merge(
+                        self::$_put, $parsed
+                    );
+                break;
+                case 'DELETE':
+                    self::$_delete = array_merge(
+                        self::$_delete, $parsed
+                    );
+                break;
+            }
+
         }
 
         self::$processed = TRUE;
@@ -358,7 +394,24 @@ abstract class Request {
     }
 
     /**
-     * Retrieve Client IP
+     * Retrieve values sent by CLI $argv
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function arg($key = NULL, $default = NULL){
+
+        self::process();
+
+        return self::retrieve(
+            self::$_arg,
+            $key,
+            $default
+        );
+    }
+
+    /**
+     * Retrieve client IP
      * @return string
      */
     public static function clientIp(){
