@@ -2,6 +2,7 @@
 
 namespace Orbital\Framework;
 
+use \Exception;
 use \Orbital\Framework\App;
 
 abstract class Observer {
