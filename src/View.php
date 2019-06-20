@@ -17,8 +17,8 @@ abstract class View {
     private static $level = -1;
 
     /**
-     * Define global variables from view level data
-     * Also require view file if need
+     * Define global variable ($view) from view level data
+     * Requires view file if need
      * @return void
      */
     public static function process($file = NULL){
@@ -26,12 +26,10 @@ abstract class View {
         $exists = isset( self::$data[ self::$level ] );
 
         if( $exists ){
-            $variables = self::$data[ self::$level ];
 
-            foreach( $variables as $key => $value ){
-                global $$key;
-                $$key = $value;
-            }
+            global $view;
+            $view = self::$data[ self::$level ];
+
         }
 
         if( $file ){
@@ -42,18 +40,18 @@ abstract class View {
 
     /**
      * Retrieve view
-     * @param string $view
-     * @param array $data
+     * @param string $file
+     * @param mixed $data
      * @return string
      */
-    public static function get($view, $data = array()){
+    public static function get($file, $data = NULL){
 
         if( $data ){
             self::$level = self::$level + 1;
-            self::$data[ self::$level ] = (array) $data;
+            self::$data[ self::$level ] = $data;
         }
 
-        $file = SRC. "{$view}.php";
+        $file = SRC. "{$file}.php";
 
         // Parse view
         ob_start();
@@ -68,31 +66,31 @@ abstract class View {
 
             }
 
-            $view = ob_get_contents();
+            $result = ob_get_contents();
 
         ob_end_clean();
 
-        return $view;
+        return $result;
     }
 
     /**
      * Render view
-     * @param string|array $view
-     * @param array $data
+     * @param string|array $file
+     * @param mixed $data
      * @return void
      */
-    public static function render($view, $data = array()){
+    public static function render($file, $data = NULL){
 
-        if( is_array($view) ){
+        if( is_array($file) ){
 
-            foreach( $view as $item ){
+            foreach( $file as $item ){
                 self::render($item, $data);
             }
 
             return;
         }
 
-        echo self::get($view, $data);
+        echo self::get($file, $data);
     }
 
 }
