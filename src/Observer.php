@@ -2,9 +2,6 @@
 
 namespace Orbital\Framework;
 
-use \Exception;
-use \Orbital\Framework\App;
-
 abstract class Observer {
 
     /**
@@ -28,8 +25,8 @@ abstract class Observer {
 
         if( $position ){
 
-            if( isset(self::$observers[ $event ][ $position ]) ){
-                throw new Exception('Position ('. $position. ') already exist on this observer event: '. $event);
+            while( isset(self::$observers[ $event ][ $position ]) ){
+                $position = $position++;
             }
 
             self::$observers[ $event ][ $position ] = $callback;
