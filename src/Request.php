@@ -52,6 +52,12 @@ abstract class Request {
      */
     private static $_cookie = array();
 
+     /**
+     * $_ENV
+     * @var array
+     */
+    private static $_env = array();
+
     /**
      * CLI $arg
      * @var array
@@ -163,6 +169,15 @@ abstract class Request {
             foreach( $_COOKIE as $key => $value ){
                 if( !is_null($value) ){
                     self::$_cookie[ $key ] = $value;
+                }
+            }
+        }
+
+        // Environment
+        if( isset($_ENV) ){
+            foreach( $_ENV as $key => $value ){
+                if( !is_null($value) ){
+                    self::$_env[ $key ] = $value;
                 }
             }
         }
@@ -388,6 +403,23 @@ abstract class Request {
 
         return self::retrieve(
             self::$_cookie,
+            $key,
+            $default
+        );
+    }
+
+    /**
+     * Retrieve values sent by $_ENV
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function env($key = NULL, $default = NULL){
+
+        self::process();
+
+        return self::retrieve(
+            self::$_env,
             $key,
             $default
         );
