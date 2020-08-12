@@ -130,7 +130,7 @@ abstract class Router {
         foreach( $routers as $router ){
 
             $pattern = $router['rule'];
-            $pattern = preg_replace('/\(:([a-zA-Z0-9]+)\)/', '([a-z0-9]+)', $pattern);
+            $pattern = preg_replace('/\(:([a-zA-Z0-9]+)\)/', '([a-z0-9-_]+)', $pattern);
             $pattern = '/^'. str_replace('/', '\/', $pattern). '$/i';
 
             if( preg_match($pattern, $uri, $matches) OR $router['rule'] == $uri ){
