@@ -186,15 +186,13 @@ abstract class Request {
         if( isset($argv) ){
             foreach( $argv as $key => $value ){
 
-                if( $key == 0 ){
-                    continue;
-                }
-
                 if( preg_match('/--([^=]+)=(.*)/', $value, $matches) ){
                     self::$_arg[ $matches[1] ] = $matches[2];
 
                 }elseif( preg_match('/-([a-zA-Z0-9])/', $value, $matches) ){
                     self::$_arg[ $matches[1] ] = true;
+                }else{
+                    self::$_arg[ $key ] = $value;
                 }
 
             }
