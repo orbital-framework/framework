@@ -29,7 +29,7 @@ abstract class App {
 
         if( is_array($directory) ){
 
-            foreach( $directory as $key => $value ){
+            foreach( $directory as $value ){
                 self::importFolder($value, $extension);
             }
 
@@ -58,7 +58,7 @@ abstract class App {
 
         if( is_array($file) ){
 
-            foreach( $file as $key => $value ){
+            foreach( $file as $value ){
                 self::importFile($directory, $value, $extension);
             }
 
@@ -192,6 +192,7 @@ abstract class App {
 
     /**
      * Run method
+     * Accepts syntax: \Namespace\Class@method
      * @param string $method
      * @param array $parameters
      * @return object
