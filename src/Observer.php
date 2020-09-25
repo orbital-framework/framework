@@ -26,7 +26,7 @@ abstract class Observer {
         if( $position ){
 
             while( isset(self::$observers[ $event ][ $position ]) ){
-                $position = $position++;
+                $position++;
             }
 
             self::$observers[ $event ][ $position ] = $callback;
