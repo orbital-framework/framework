@@ -184,18 +184,20 @@ abstract class Request {
 
         // CLI arg
         if( isset($argv) ){
+
             foreach( $argv as $key => $value ){
 
-                if( preg_match('/--([^=]+)=(.*)/', $value, $matches) ){
+                if( preg_match('/^--([^=]+)=(.*)/', $value, $matches) ){
                     self::$_arg[ $matches[1] ] = $matches[2];
 
-                }elseif( preg_match('/-([a-zA-Z0-9])/', $value, $matches) ){
+                }elseif( preg_match('/^-([a-zA-Z0-9]+)/', $value, $matches) ){
                     self::$_arg[ $matches[1] ] = true;
                 }else{
                     self::$_arg[ $key ] = $value;
                 }
 
             }
+
         }
 
         // PHP Input
