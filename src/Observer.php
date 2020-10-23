@@ -40,12 +40,28 @@ abstract class Observer {
     }
 
     /**
-     * Remove all watches on event
+     * Remove one or all watches on event
      * @param string $event
+     * @param mixed $callback
      * @return void
      */
-    public static function off($event){
-        unset(self::$observers[ $event ]);
+    public static function off($event, $callback = NULL){
+
+        if( !isset(self::$observers[ $event ]) ){
+            return;
+        }
+
+        if( !$callback ){
+            unset(self::$observers[ $event ]);
+            return;
+        }
+
+        $index = array_search($callback, self::$observers[ $event ]);
+
+        if( $index !== FALSE ){
+            unset(self::$observers[ $event ][ $index ]);
+        }
+
     }
 
     /**
