@@ -20,6 +20,12 @@ abstract class App {
     private static $config = NULL;
 
     /**
+     * Modules
+     * @var array
+     */
+    private static $modules = array();
+
+    /**
      * Import all files from folder
      * @param string|array $directory
      * @param string $extension
@@ -81,11 +87,25 @@ abstract class App {
      */
     public static function loadModule($namespace){
 
+        if( self::loadedModule($namespace) ){
+            return;
+        }
+
         $folder = str_replace('\\', DS, $namespace);
         $folder = trim($folder, DS);
 
+        self::$modules[] = $namespace;
         self::importFolder(SRC. $folder. DS. 'Config');
 
+    }
+
+    /**
+     * Return if module has already been loaded
+     * @param string $namespace
+     * @return boolean
+     */
+    public static function loadedModule($namespace){
+        return in_array($namespace, self::$modules);
     }
 
     /**
