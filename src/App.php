@@ -234,12 +234,12 @@ abstract class App {
                 throw new Exception($class. ' not found');
             }
 
-            // If method not exists or is not public
-            if( !is_callable(array($class, $classMethod)) ){
-                throw new Exception($class. '::'. $classMethod. ' is not callable or not exists');
-            }
-
             $class = self::singleton($class);
+
+            // If method not exists or is not public
+            if( !in_array($classMethod, get_class_methods($class)) ){
+                throw new Exception($class. '::'. $classMethod. ' is not public callable or not exists');
+            }
 
             return $class->$classMethod(...$parameters);
         }
