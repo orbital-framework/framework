@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Orbital\Framework;
 
@@ -11,13 +12,13 @@ abstract class App {
      * Singleton instances
      * @var mixed
      */
-    private static $instances = NULL;
+    private static $instances = null;
 
     /**
      * Configs
      * @var mixed
      */
-    private static $config = NULL;
+    private static $config = null;
 
     /**
      * Modules
@@ -31,7 +32,7 @@ abstract class App {
      * @param string $extension
      * @return void
      */
-    public static function importFolder($directory, $extension = '.php'){
+    public static function importFolder(string|array $directory, string $extension = '.php'): void {
 
         if( is_array($directory) ){
 
@@ -60,7 +61,7 @@ abstract class App {
      * @param string $extension
      * @return void
      */
-    public static function importFile($directory, $file, $extension = '.php'){
+    public static function importFile(string $directory, string|array $file, string $extension = '.php'): void {
 
         if( is_array($file) ){
 
@@ -85,7 +86,7 @@ abstract class App {
      * @param string $namespace
      * @return void
      */
-    public static function loadModule($namespace){
+    public static function loadModule(string $namespace): void {
 
         if( self::loadedModule($namespace) ){
             return;
@@ -104,17 +105,17 @@ abstract class App {
      * @param string $namespace
      * @return boolean
      */
-    public static function loadedModule($namespace){
+    public static function loadedModule(string $namespace): bool {
         return in_array($namespace, self::$modules);
     }
 
     /**
-     * Retrieve Config object
+     * Retrieve config object
      * @return Entity
      */
-    public static function getConfig(){
+    public static function getConfig(): Entity {
 
-        if( self::$config == NULL ){
+        if( is_null(self::$config) ){
             self::$config = new Entity;
         }
 
@@ -125,9 +126,9 @@ abstract class App {
      * Retrieve object instances
      * @return Entity
      */
-    public static function getInstances(){
+    public static function getInstances(): Entity {
 
-        if( self::$instances == NULL ){
+        if( is_null(self::$instances) ){
             self::$instances = new Entity;
         }
 
@@ -137,10 +138,10 @@ abstract class App {
     /**
      * Set config data
      * @param string|array $key
-     * @param string $value
+     * @param mixed $value
      * @return void
      */
-    public static function set($key, $value = NULL){
+    public static function set(string|array $key, mixed $value = null): void {
 
         $config = self::getConfig();
 
@@ -159,7 +160,7 @@ abstract class App {
      * @param string|array $key
      * @return void
      */
-    public static function delete($key){
+    public static function delete(string|array $key): void {
 
         $config = self::getConfig();
 
@@ -176,10 +177,9 @@ abstract class App {
     /**
      * Retrieve config data
      * @param string $key
-     * @param string $sub
      * @return mixed
      */
-    public static function get($key){
+    public static function get(string $key): mixed {
 
         $config = self::getConfig();
 
@@ -199,7 +199,7 @@ abstract class App {
      * @param string $class
      * @return object
      */
-    public static function singleton($class){
+    public static function singleton(string $class): object {
 
         $instances = self::getInstances();
 
@@ -215,30 +215,30 @@ abstract class App {
      * Accepts syntax: \Namespace\Class@method
      * @param string $method
      * @param array $parameters
-     * @return object
+     * @return mixed
      */
-    public static function runMethod($method, $parameters = array()){
+    public static function runMethod(string $method, array $parameters = array()): mixed {
 
         if( !is_array($parameters) ){
             $parameters = array($parameters);
         }
 
         if( is_string($method)
-            AND strpos($method, '@') !== FALSE ){
+            AND strpos($method, '@') !== false ){
 
             $method = explode('@', $method);
             $class = $method[0];
             $classMethod = $method[1];
 
             if( !class_exists($class) ){
-                throw new Exception($class. ' not found');
+                throw new Exception($class. ' not found.');
             }
 
             $class = self::singleton($class);
 
             // If method not exists or is not public
             if( !in_array($classMethod, get_class_methods($class)) ){
-                throw new Exception($class. '::'. $classMethod. ' is not public callable or not exists');
+                throw new Exception($class. '::'. $classMethod. ' is not public callable or not exists.');
             }
 
             return $class->$classMethod(...$parameters);
@@ -246,7 +246,7 @@ abstract class App {
 
         // If function not exists or is not public
         if( !is_callable($method) ){
-            throw new Exception($method. ' is not callable or not exists');
+            throw new Exception($method. ' is not callable or not exists.');
         }
 
         return $method(...$parameters);

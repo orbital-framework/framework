@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Orbital\Framework;
 
@@ -68,13 +69,13 @@ abstract class Request {
      * Processed flag
      * @var boolean
      */
-    private static $processed = FALSE;
+    private static $processed = false;
 
     /**
      * Process input data
      * @return void
      */
-    private static function process(){
+    private static function process(): void {
         global $argv;
 
         if( self::$processed ){
@@ -202,9 +203,9 @@ abstract class Request {
 
         // PHP Input
         $input = file_get_contents('php://input');
-        $parsed = json_decode($input, TRUE);
+        $parsed = json_decode($input, true);
 
-        if( $parsed === FALSE ){
+        if( is_null($parsed) ){
             $parsed = array();
             parse_str($input, $parsed);
         }
@@ -244,7 +245,7 @@ abstract class Request {
 
         }
 
-        self::$processed = TRUE;
+        self::$processed = true;
 
     }
 
@@ -255,11 +256,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    private static function retrieve(
-        $data = array(),
-        $key = NULL,
-        $default = NULL
-    ){
+    private static function retrieve(array $data = array(), string $key = null, mixed $default = null): mixed {
 
         if( is_null($key) ){
             return $data;
@@ -278,7 +275,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function header($key = NULL, $default = NULL){
+    public static function header(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -295,7 +292,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function request($key = NULL, $default = NULL){
+    public static function request(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -312,7 +309,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function post($key = NULL, $default = NULL){
+    public static function post(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -329,7 +326,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function get($key = NULL, $default = NULL){
+    public static function get(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -346,7 +343,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function put($key = NULL, $default = NULL){
+    public static function put(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -363,7 +360,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function delete($key = NULL, $default = NULL){
+    public static function delete(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -380,7 +377,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function files($key = NULL, $default = NULL){
+    public static function files(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -397,7 +394,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function cookie($key = NULL, $default = NULL){
+    public static function cookie(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -414,7 +411,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function env($key = NULL, $default = NULL){
+    public static function env(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -431,7 +428,7 @@ abstract class Request {
      * @param mixed $default
      * @return mixed
      */
-    public static function arg($key = NULL, $default = NULL){
+    public static function arg(string $key = null, mixed $default = null): mixed {
 
         self::process();
 
@@ -446,7 +443,7 @@ abstract class Request {
      * Retrieve request interface Method
      * @return string
      */
-    public static function method(){
+    public static function method(): string {
 
         if( php_sapi_name() === 'cli' OR defined('STDIN') ){
             $method = 'CLI';
@@ -457,7 +454,7 @@ abstract class Request {
                         $_SERVER['REQUEST_METHOD'] : 'GET';
 
             // Force GET when method is HEAD
-            if( $method == 'HEAD' ){
+            if( $method === 'HEAD' ){
                 $method = 'GET';
             }
 
@@ -470,7 +467,7 @@ abstract class Request {
      * Retrieve client IP
      * @return string
      */
-    public static function clientIp(){
+    public static function clientIp(): string {
 
         if( isset($_SERVER) ){
 

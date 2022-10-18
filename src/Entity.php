@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Orbital\Framework;
 
@@ -30,7 +31,7 @@ class Entity implements ArrayAccess {
      * @param string $name
      * @return string
      */
-    protected function normalizeKeyName($name){
+    protected function normalizeKeyName(string $name): string {
 
         $name = preg_replace('/(.)([A-Z])/', "$1_$2", $name);
         $result = strtolower( $name );
@@ -44,7 +45,7 @@ class Entity implements ArrayAccess {
      * @param array $args
      * @return mixed
      */
-    public function __call($method, $args){
+    public function __call(string $method, array $args): mixed {
 
         $key = $this->normalizeKeyName( substr($method, 3) );
         $action = substr($method, 0, 3);
@@ -52,12 +53,12 @@ class Entity implements ArrayAccess {
         switch( $action ){
             case 'get' :
                 $data = $this->getData(
-                    $key, isset($args[0]) ? $args[0] : NULL);
+                    $key, isset($args[0]) ? $args[0] : null);
                 return $data;
 
             case 'set' :
                 $result = $this->setData(
-                    $key, isset($args[0]) ? $args[0] : NULL);
+                    $key, isset($args[0]) ? $args[0] : null);
                 return $result;
 
             case 'uns' :
@@ -79,7 +80,7 @@ class Entity implements ArrayAccess {
      * @param string $key
      * @return boolean
      */
-    public function hasData($key = ''){
+    public function hasData(string $key = ''): bool {
 
         $key = $this->normalizeKeyName($key);
 
@@ -95,7 +96,7 @@ class Entity implements ArrayAccess {
      * @param string $key
      * @return mixed
      */
-    public function getData($key = ''){
+    public function getData(string $key = ''): mixed {
 
         $key = $this->normalizeKeyName($key);
 
@@ -103,16 +104,16 @@ class Entity implements ArrayAccess {
             return $this->_data;
         }
 
-        return isset($this->_data[$key]) ? $this->_data[$key] : NULL;
+        return isset($this->_data[$key]) ? $this->_data[$key] : null;
     }
 
     /**
      * Set object data
      * @param string $key
      * @param mixed $value
-     * @return object
+     * @return self
      */
-    public function setData($key, $value){
+    public function setData(string $key, mixed $value): self {
 
         $key = $this->normalizeKeyName($key);
 
@@ -133,9 +134,9 @@ class Entity implements ArrayAccess {
     /**
      * Push object data
      * @param mixed $value
-     * @return object
+     * @return self
      */
-    public function pushData($value){
+    public function pushData(mixed $value): self {
 
         $this->_data[] = $value;
         $this->_changes[] = $value;
@@ -146,9 +147,9 @@ class Entity implements ArrayAccess {
     /**
      * Push data to the object
      * @param array $data
-     * @return object
+     * @return self
      */
-    public function addData($data){
+    public function addData(array $data): self {
         foreach( $data as $key => $value ){
             $this->setData($key, $value);
         }
@@ -158,15 +159,15 @@ class Entity implements ArrayAccess {
     /**
      * Unset data on object
      * @param string $key
-     * @return object
+     * @return self
      */
-    public function unsetData($key){
+    public function unsetData(string $key): self {
 
         $key = $this->normalizeKeyName($key);
 
         if( isset($this->_data[$key]) ){
             $this->_original[$key] = $this->_data[$key];
-            $this->_changes[$key] = NULL;
+            $this->_changes[$key] = null;
             unset($this->_data[$key]);
         }
 
@@ -175,20 +176,18 @@ class Entity implements ArrayAccess {
 
     /**
      * Clean data on object
-     * @param string $key
-     * @return object
+     * @return self
      */
-    public function cleanData(){
+    public function cleanData(): self {
         $this->_data = array();
         return $this->cleanChanges();
     }
 
     /**
      * Clean data changes on object
-     * @param string $key
-     * @return object
+     * @return self
      */
-    public function cleanChanges(){
+    public function cleanChanges(): self {
 
         $this->_original = array();
         $this->_changes = array();
@@ -200,7 +199,7 @@ class Entity implements ArrayAccess {
      * Retrieve object data original
      * @return array
      */
-    public function getOriginal(){
+    public function getOriginal(): array {
         return $this->_original;
     }
 
@@ -208,7 +207,7 @@ class Entity implements ArrayAccess {
      * Retrieve object data changes
      * @return array
      */
-    public function getChanges(){
+    public function getChanges(): array {
         return $this->_changes;
     }
 
@@ -217,7 +216,7 @@ class Entity implements ArrayAccess {
      * @param array $attributes
      * @return array
      */
-    public function __toArray($attributes = array()){
+    public function __toArray(array $attributes = array()): array {
 
         if( empty($attributes) ){
             $data = $this->_data;
@@ -228,7 +227,7 @@ class Entity implements ArrayAccess {
                 if( isset($this->_data[$attribute]) ){
                     $data[$attribute] = $this->_data[$attribute];
                 } else {
-                    $data[$attribute] = NULL;
+                    $data[$attribute] = null;
                 }
             }
 
@@ -249,45 +248,45 @@ class Entity implements ArrayAccess {
      * @param array $attributes
      * @return array
      */
-    public function toArray($attributes = array()){
+    public function toArray(array $attributes = array()): array {
         return $this->__toArray($attributes);
     }
 
     /**
      * Implementation of ArrayAccess::offsetSet()
-     * @param string $offset
+     * @param mixed $offset
      * @param mixed $value
      * @return void
      */
-    public function offsetSet($offset, $value){
+    public function offsetSet(mixed $offset, mixed $value): void {
         $this->_data[$offset] = $value;
     }
 
     /**
      * Implementation of ArrayAccess::offsetExists()
-     * @param string $offset
+     * @param mixed $offset
      * @return boolean
      */
-    public function offsetExists($offset){
+    public function offsetExists(mixed $offset): bool {
         return isset($this->_data[$offset]);
     }
 
     /**
      * Implementation of ArrayAccess::offsetUnset()
-     * @param string $offset
+     * @param mixed $offset
      * @return void
      */
-    public function offsetUnset($offset){
+    public function offsetUnset(mixed $offset): void {
         unset($this->_data[$offset]);
     }
 
     /**
      * Implementation of ArrayAccess::offsetGet()
-     * @param string $offset
+     * @param mixed $offset
      * @return mixed
      */
-    public function offsetGet($offset){
-        return isset($this->_data[$offset]) ? $this->_data[$offset] : NULL;
+    public function offsetGet(mixed $offset): mixed {
+        return isset($this->_data[$offset]) ? $this->_data[$offset] : null;
     }
 
 }

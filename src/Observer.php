@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Orbital\Framework;
 
@@ -14,10 +15,10 @@ abstract class Observer {
      * Add watches to event
      * @param string $event
      * @param string $callback
-     * @param mixed $position
+     * @param int $position
      * @return void
      */
-    public static function on($event, $callback, $position = NULL){
+    public static function on(string $event, string $callback, int $position = 0): void {
 
         if( !isset(self::$observers[ $event ]) ){
             self::$observers[ $event ] = array();
@@ -42,10 +43,10 @@ abstract class Observer {
     /**
      * Remove one or all watches on event
      * @param string $event
-     * @param mixed $callback
+     * @param string $callback
      * @return void
      */
-    public static function off($event, $callback = NULL){
+    public static function off(string $event, string $callback = ''): void {
 
         if( !isset(self::$observers[ $event ]) ){
             return;
@@ -58,7 +59,7 @@ abstract class Observer {
 
         $index = array_search($callback, self::$observers[ $event ]);
 
-        if( $index !== FALSE ){
+        if( $index !== false ){
             unset(self::$observers[ $event ][ $index ]);
         }
 
@@ -67,13 +68,13 @@ abstract class Observer {
     /**
      * Fire event and process all watches
      * @param string $event
-     * @param mixed $data
-     * @return mixed
+     * @param array $data
+     * @return void
      */
-    public static function fire($event, $data = NULL){
+    public static function fire(string $event, array $data = array()): mixed {
 
         if( !isset(self::$observers[ $event ]) ){
-            return $data;
+            return;
         }
 
         $observers = self::$observers[ $event ];
@@ -83,7 +84,6 @@ abstract class Observer {
             App::runMethod($observer, $data);
         }
 
-        return $data;
     }
 
 }
