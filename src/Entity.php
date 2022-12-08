@@ -55,7 +55,7 @@ class Entity implements ArrayAccess {
      * @param string $name
      * @return string
      */
-    protected function normalizeKey(string $name): string {
+    public function normalizeKey(string $name): string {
 
         switch( $this->_normalize ){
             case self::NORMALIZE_SNAKE_CASE:
@@ -83,7 +83,7 @@ class Entity implements ArrayAccess {
      * @param array $data
      * @return array
      */
-    protected function normalizeKeys(array $data): array {
+    public function normalizeKeys(array $data): array {
 
         $normalized = array();
         foreach( $data as $key => $value ){
