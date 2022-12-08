@@ -8,6 +8,11 @@ use \Exception;
 
 class Entity implements ArrayAccess {
 
+    // Key normalization model
+    const NORMALIZE_CAMEL_CASE = 'camel';
+    const NORMALIZE_SNAKE_CASE = 'snake';
+    const NORMALIZE_KEBAB_CASE = 'kebab';
+
     /**
      * Object data
      * @var array
@@ -27,16 +32,50 @@ class Entity implements ArrayAccess {
     protected $_changes = array();
 
     /**
+     * Normalization method
+     * @var string
+     */
+    protected $_normalize = self::NORMALIZE_SNAKE_CASE;
+    
+    /**
+     * CONSTRUCTOR
+     * @param string|null $normalize
+     * @return void
+     */
+    public function __construct(string $normalize = null) {
+
+        if( !is_null($normalize) ){
+            $this->_normalize = $normalize;
+        }
+
+    }
+
+    /**
      * Normalize key name for object mapping
      * @param string $name
      * @return string
      */
     protected function normalizeKeyName(string $name): string {
 
-        $name = preg_replace('/(.)([A-Z])/', "$1_$2", $name);
-        $result = strtolower( $name );
+        switch( $this->_normalize ){
+            case self::NORMALIZE_SNAKE_CASE:
+                $name = preg_replace('/(.)([-_\s]+)/', '$1_', $name);
+                $name = preg_replace('/(.)([A-Z])/', '$1_$2', $name);
+                $name = strtolower($name);
+            break;
+            case self::NORMALIZE_KEBAB_CASE:
+                $name = preg_replace('/(.)([-_\s]+)/', '$1-', $name);
+                $name = preg_replace('/(.)([A-Z])/', '$1-$2', $name);
+                $name = strtolower($name);
+            break;
+            case self::NORMALIZE_CAMEL_CASE:
+                $name = preg_replace('/(.)([-_\s]+)/', '$1 ', $name);
+                $name = lcfirst(ucwords($name));
+                $name = str_replace(' ', '', $name);
+            break;
+        }
 
-        return $result;
+        return $name;
     }
 
     /**
