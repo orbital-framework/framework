@@ -51,11 +51,11 @@ class Entity implements ArrayAccess {
     }
 
     /**
-     * Normalize key name for object mapping
+     * Normalize key for object mapping
      * @param string $name
      * @return string
      */
-    protected function normalizeKeyName(string $name): string {
+    protected function normalizeKey(string $name): string {
 
         switch( $this->_normalize ){
             case self::NORMALIZE_SNAKE_CASE:
@@ -79,6 +79,23 @@ class Entity implements ArrayAccess {
     }
 
     /**
+     * Normalize multiple keys in array for object mapping
+     * @param array $data
+     * @return array
+     */
+    protected function normalizeKeys(array $data): array {
+
+        $normalized = array();
+        foreach( $data as $key => $value ){
+            $key = is_string($key) ? $this->normalizeKey($key) : $key;
+            $value = is_array($value) ? $this->normalizeKeys($value) : $value;
+            $normalized[ $key ] = $value;
+        }
+
+        return $normalized;
+    }
+
+    /**
      * Set/Get attribute wrapper
      * @param string $method
      * @param array $args
@@ -86,7 +103,7 @@ class Entity implements ArrayAccess {
      */
     public function __call(string $method, array $args): mixed {
 
-        $key = $this->normalizeKeyName( substr($method, 3) );
+        $key = $this->normalizeKey( substr($method, 3) );
         $action = substr($method, 0, 3);
 
         switch( $action ){
@@ -121,7 +138,7 @@ class Entity implements ArrayAccess {
      */
     public function hasData(string $key = ''): bool {
 
-        $key = $this->normalizeKeyName($key);
+        $key = $this->normalizeKey($key);
 
         if( empty($key) || !is_string($key) ){
             return !empty($this->_data);
@@ -137,7 +154,7 @@ class Entity implements ArrayAccess {
      */
     public function getData(string $key = ''): mixed {
 
-        $key = $this->normalizeKeyName($key);
+        $key = $this->normalizeKey($key);
 
         if( $key === '' ){
             return $this->_data;
@@ -154,7 +171,7 @@ class Entity implements ArrayAccess {
      */
     public function setData(string $key, mixed $value): self {
 
-        $key = $this->normalizeKeyName($key);
+        $key = $this->normalizeKey($key);
 
         if( isset($this->_data[$key]) ){
             if( $this->_data[$key] !== $value ){
@@ -202,7 +219,7 @@ class Entity implements ArrayAccess {
      */
     public function unsetData(string $key): self {
 
-        $key = $this->normalizeKeyName($key);
+        $key = $this->normalizeKey($key);
 
         if( isset($this->_data[$key]) ){
             $this->_original[$key] = $this->_data[$key];
