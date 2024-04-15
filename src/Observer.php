@@ -68,10 +68,10 @@ abstract class Observer {
     /**
      * Fire event and process all watches
      * @param string $event
-     * @param array $data
+     * @param array|Entity $data
      * @return void
      */
-    public static function fire(string $event, array $data = array()): mixed {
+    public static function fire(string $event, array|Entity $data = array()): void {
 
         if( !isset(self::$observers[ $event ]) ){
             return;

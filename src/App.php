@@ -176,10 +176,10 @@ abstract class App {
 
     /**
      * Retrieve config data
-     * @param string $key
+     * @param string|array $key
      * @return mixed
      */
-    public static function get(string $key): mixed {
+    public static function get(string|array $key): mixed {
 
         $config = self::getConfig();
 
@@ -214,10 +214,10 @@ abstract class App {
      * Run method
      * Accepts syntax: \Namespace\Class@method
      * @param string $method
-     * @param array $parameters
+     * @param array|Entity $parameters
      * @return mixed
      */
-    public static function runMethod(string $method, array $parameters = array()): mixed {
+    public static function runMethod(string $method, array|Entity $parameters = array()): mixed {
 
         if( !is_array($parameters) ){
             $parameters = array($parameters);
